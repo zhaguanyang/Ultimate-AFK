@@ -7,7 +7,7 @@
     {
         [Description("Is the plugin enabled?")]
         public bool IsEnabled { get; set; } = true;
-        [Description("Minimum required players for uAFK to be active.")]
+        [Description("Minimum (inclusive) required players for uAFK to be active.")]
         public int MinPlayers { get; set; } = 2;
         [Description("Do AFK players get replaced by spectators?")]
         public bool TryReplace { get; private set; } = true;
@@ -28,5 +28,8 @@
         public string MsgFspec { get; private set; } = "You were detected as AFK and automatically moved to spectator!";
         public string MsgKick { get; private set; } = "[Kicked by uAFK] You were AFK for too long!";
         public string MsgReplace { get; private set; } = "You have replaced a player that was AFK.";
+
+        [Description("Wanna log some detailed stuff why not worky work? Lots of stuff,  be cautious!")]
+        public bool EnableDebugLog { get; private set; } = false;
     }
 }

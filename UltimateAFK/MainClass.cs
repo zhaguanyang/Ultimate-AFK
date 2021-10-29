@@ -51,8 +51,8 @@ namespace UltimateAFK
         public override string Author { get; } = "Thomasjosif";
         public override string Name { get; } = "Ultimate AFK";
         public override string Prefix { get; } = "uAFK";
-        public override Version Version { get; } = new Version(3, 1, 6);
-        public override Version RequiredExiledVersion { get; } = new Version(2, 2, 4);
+        public override Version Version { get; } = new Version(3, 2, 1);
+        public override Version RequiredExiledVersion { get; } = new Version(3,2,1);
         public PlayerEvents PlayerEvents;
 
         public override PluginPriority Priority { get; } = PluginPriority.Medium;
@@ -64,14 +64,13 @@ namespace UltimateAFK
             {
                 PlayerEvents = new PlayerEvents(this);
 
-                Handlers.Player.Verified += PlayerEvents.OnPlayerVerified;
-                Handlers.Player.ChangingRole += PlayerEvents.OnSetClass;
+                Handlers.Player.Spawning += PlayerEvents.OnPlayerSpawned;
                 Handlers.Player.Shooting += PlayerEvents.OnPlayerShoot;
                 Handlers.Player.InteractingDoor += PlayerEvents.OnDoorInteract;
                 Handlers.Scp914.Activating += PlayerEvents.On914Activate;
                 Handlers.Scp914.ChangingKnobSetting += PlayerEvents.On914Change;
                 Handlers.Player.InteractingLocker += PlayerEvents.OnLockerInteract;
-                Handlers.Player.ItemDropped += PlayerEvents.OnDropItem;
+                Handlers.Player.DroppingItem += PlayerEvents.OnDropItem;
                 Handlers.Scp079.GainingExperience += PlayerEvents.OnSCP079Exp;
 
                 Log.Info($"UltimateAFK plugin loaded.\n Written by Thomasjosif for King's Playground");
@@ -85,14 +84,13 @@ namespace UltimateAFK
         public override void OnDisabled()
         {
             base.OnDisabled();
-            Handlers.Player.Verified -= PlayerEvents.OnPlayerVerified;
-            Handlers.Player.ChangingRole -= PlayerEvents.OnSetClass;
+            Handlers.Player.Spawning -= PlayerEvents.OnPlayerSpawned;
             Handlers.Player.Shooting -= PlayerEvents.OnPlayerShoot;
             Handlers.Player.InteractingDoor -= PlayerEvents.OnDoorInteract;
             Handlers.Scp914.Activating -= PlayerEvents.On914Activate;
             Handlers.Scp914.ChangingKnobSetting -= PlayerEvents.On914Change;
             Handlers.Player.InteractingLocker -= PlayerEvents.OnLockerInteract;
-            Handlers.Player.ItemDropped -= PlayerEvents.OnDropItem;
+            Handlers.Player.DroppingItem -= PlayerEvents.OnDropItem;
             Handlers.Scp079.GainingExperience -= PlayerEvents.OnSCP079Exp;
 
             PlayerEvents = null;

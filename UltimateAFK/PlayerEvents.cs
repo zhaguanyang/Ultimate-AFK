@@ -17,36 +17,17 @@ namespace UltimateAFK
 			this.plugin = plugin;
 		}
 
-		public void OnPlayerVerified(VerifiedEventArgs ev)
+		public void OnPlayerSpawned(SpawningEventArgs ev)
 		{
+			if (ev.Player.IPAddress == "127.0.0.1" && !plugin.Config.IgnorePermissionsAndIP || 
+			    ev.Player.GameObject.gameObject.GetComponent<AFKComponent>() != null || 
+			    ev.Player.CheckPermission("uafk.ignore") && !plugin.Config.IgnorePermissionsAndIP || 
+			    IsGhost(ev.Player)
+			) return;
+			
 			// Add a component to the player to check AFK status.
 			AFKComponent afkComponent = ev.Player.GameObject.gameObject.AddComponent<AFKComponent>();
 			afkComponent.plugin = plugin;
-		}
-
-		// This check was moved here, because player's rank's are set AFTER OnPlayerJoin()
-		public void OnSetClass(ChangingRoleEventArgs ev)
-		{
-			try
-			{
-				if (ev.Player == null) return;
-				AFKComponent afkComponent = ev.Player.GameObject.gameObject.GetComponent<AFKComponent>();
-
-				if (afkComponent != null)
-                {
-					if (!plugin.Config.IgnorePermissionsAndIP)
-						if (ev.Player.CheckPermission("uafk.ignore") || ev.Player.IPAddress == "127.0.0.1") //127.0.0.1 is sometimes used for "Pets" which causes issues
-							afkComponent.disabled = true;
-					if (IsGhost(ev.Player))
-							afkComponent.disabled = true;
-				}
-					
-
-			}
-			catch (Exception e)
-			{
-				Log.Error($"ERROR In OnSetClass(): {e}");
-			}
 		}
 
 		/*
@@ -110,7 +91,7 @@ namespace UltimateAFK
 				Log.Error($"ERROR In OnLockerInteract(): {e}");
 			}
 		}
-		public void OnDropItem(ItemDroppedEventArgs ev)
+		public void OnDropItem(DroppingItemEventArgs ev)
 		{
 			try
 			{
