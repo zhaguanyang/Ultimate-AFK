@@ -8,7 +8,7 @@ using Exiled.Loader;
 using PlayableScps;
 using System.Reflection;
 using Exiled.API.Enums;
-
+using Exiled.API.Features.Roles;
 namespace UltimateAFK
 {
     public class AFKComponent : MonoBehaviour
@@ -29,8 +29,8 @@ namespace UltimateAFK
         // Do not change this delay. It will screw up the detection
         public float delay = 1.0f;
 
-        private IEnumerable<Player> TryGet035() => Scp035.API.AllScp035;
-        private void TrySpawn035(Player player) => Scp035.API.Spawn035(player);
+        //private IEnumerable<Player> TryGet035() => Scp035.API.AllScp035;
+        //private void TrySpawn035(Player player) => Scp035.API.Spawn035(player);
 
         // Expose replacing player for plugin support
         public Player PlayerToReplace;
@@ -67,7 +67,7 @@ namespace UltimateAFK
         {
             if (plugin.Config.EnableDebugLog)
                 Log.Info($"AFK Time: {this.AFKTime} AFK Count: {this.AFKCount}");
-            if (ply.Team == Team.RIP || Player.List.Count() < plugin.Config.MinPlayers || (plugin.Config.IgnoreTut && ply.Team == Team.TUT)) return;
+            if (ply.Role.Team == Team.RIP || Player.List.Count() < plugin.Config.MinPlayers || (plugin.Config.IgnoreTut && ply.Role.Team == Team.TUT)) return;
 
             bool isScp079 = (ply.Role == RoleType.Scp079);
             bool scp096TryNotToCry = false;
@@ -81,7 +81,15 @@ namespace UltimateAFK
             }
 
             Vector3 CurrentPos = ply.Position;
-            Vector3 CurrentAngle = (isScp079) ? ply.Camera.targetPosition.position : ply.Rotation;
+            Vector3 CurrentAngle = new Vector3();
+            if (ply.Role.Is(out Scp079Role scp079))
+            {
+                CurrentAngle = scp079.Camera.HeadPosition;
+            }
+            else
+            {
+                CurrentAngle = ply.Rotation;
+            }
 
             if (CurrentPos != AFKLastPosition || CurrentAngle != AFKLastAngle || scp096TryNotToCry)
             {
@@ -119,24 +127,13 @@ namespace UltimateAFK
             AFKTime = 0;
 
             // Let's make sure they are still alive before doing any replacement.
-            if (ply.Team == Team.RIP) return;
+            if (ply.Role.Team == Team.RIP) return;
 
             if (plugin.Config.TryReplace && !IsPastReplaceTime())
             {
                 Assembly easyEvents = Loader.Plugins.FirstOrDefault(pl => pl.Name == "EasyEvents")?.Assembly;
 
                 var roleEasyEvents = easyEvents?.GetType("EasyEvents.Util")?.GetMethod("GetRole")?.Invoke(null, new object[] { ply });
-
-                // SCP035 Support (Credit DCReplace)
-                bool is035 = false;
-                try
-                {
-                    is035 = TryGet035()?.Contains(ply) ?? false;
-                }
-                catch (Exception e)
-                {
-                    Log.Debug($"SCP-035 is not installed, skipping method call: {e}");
-                }
 
                 // Credit: DCReplace :)
                 // I mean at this point 90% of this has been rewritten lol...
@@ -152,11 +149,11 @@ namespace UltimateAFK
                 // Stuff for 079
                 byte Level079 = 0;
                 float Exp079 = 0f, AP079 = 0f;
-                if (isScp079)
+                if (ply.Role.Is(out Scp079Role scp0792))
                 {
-                    Level079 = ply.Level;
-                    Exp079 = ply.Experience;
-                    AP079 = ply.Energy;
+                    Level079 = scp0792.Level;
+                    Exp079 = scp0792.Experience;
+                    AP079 = scp0792.Energy;
                 }
 
                 PlayerToReplace = Player.List.FirstOrDefault(x => x.Role == RoleType.Spectator && x.UserId != string.Empty && !x.IsOverwatchEnabled && x != ply);
@@ -171,17 +168,6 @@ namespace UltimateAFK
 
                     Timing.CallDelayed(0.3f, () =>
                     {
-                        if (is035)
-                        {
-                            try
-                            {
-                                TrySpawn035(PlayerToReplace);
-                            }
-                            catch (Exception e)
-                            {
-                                Log.Debug($"SCP-035 is not installed, skipping method call: {e}");
-                            }
-                        }
                         PlayerToReplace.Position = pos;
 
                         PlayerToReplace.ClearInventory();
@@ -194,11 +180,11 @@ namespace UltimateAFK
                             PlayerToReplace.Ammo[ammoPair.Key] = ammoPair.Value;
                         }
 
-                        if (isScp079)
+                        if (ply.Role.Is(out Scp079Role scp079role))
                         {
-                            PlayerToReplace.Level = Level079;
-                            PlayerToReplace.Experience = Exp079;
-                            PlayerToReplace.Energy = AP079;
+                            Level079 = scp079role.Level;
+                            Exp079 = scp079role.Experience;
+                            AP079 = scp079role.Energy;
                         }
 
                         PlayerToReplace.Broadcast(10, $"{plugin.Config.MsgPrefix} {plugin.Config.MsgReplace}");
